@@ -27,7 +27,7 @@ app = FastAPI()
 # 2. Add this block immediately after app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # Allows your React app
+    allow_origins=["http://localhost:3000"], # Allows the React app
     allow_credentials=True,
     allow_methods=["*"], # Allows POST, GET, etc.
     allow_headers=["*"], # Allows all headers
@@ -42,7 +42,7 @@ def load_custom_model(num_classes):
     
     
     # 2. Adjust the head if you trained on a custom number of classes
-    # (e.g., if you trained on 2 classes: background + your_object)
+    # (e.g., if you trained on 2 classes: background + the_object)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, num_classes)
     
@@ -273,7 +273,7 @@ async def predict(file: UploadFile = File(...)):
     model.to(device)
     input_tensor = input_tensor.to(device)
     
-    # Run through your "Extra Pipeline Algorithms"
+    # Run through the "Extra Pipeline Algorithms"
     # Example: if you have a custom pre-filter
     # input_tensor = my_custom_pre_filter(input_tensor)
 
