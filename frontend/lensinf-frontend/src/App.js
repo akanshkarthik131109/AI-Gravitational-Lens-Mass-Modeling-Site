@@ -168,7 +168,7 @@ function App() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">Image</h2>
             <img 
-              src={`data:image/png;base64,${result.Image}`} // This matches your backend key "Image"
+              src={`data:image/png;base64,${result.Image}`} // This matches the backend key "Image"
               alt="Original with Mask"
               className="w-full h-auto rounded border"
             />
@@ -176,7 +176,7 @@ function App() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">Arc Mask</h2>
             <img 
-              src={`data:image/png;base64,${result.overlay}`} // This matches your backend key "Image"
+              src={`data:image/png;base64,${result.overlay}`} // This matches the backend key "Image"
               alt="Original with Mask"
               className="w-full h-auto rounded border"
             />
@@ -184,7 +184,7 @@ function App() {
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h2 className="text-xl font-bold mb-4">Ellipse</h2>
             <img 
-              src={`data:image/png;base64,${result.ellipse}`} // This matches your backend key "Image"
+              src={`data:image/png;base64,${result.ellipse}`} // This matches the backend key "Image"
               alt="Original with Mask"
               className="w-full h-auto rounded border"
             />
