@@ -41,7 +41,7 @@ app.add_middleware(
 def load_custom_model(num_classes):
     # 1. Initialize the architecture
     # Must match the architecture you used during training
-    model_path = '/home/akanshkarthik/anaconda3/website/backend/lenses_model_full_data_e20_V3_Update_Loss+Normalization.pt'
+    model_path = '/lenses_model_full_data_e20_V3_Update_Loss+Normalization.pt'
     model = maskrcnn_resnet50_fpn(pretrained=False, num_classes=3)
     
     
@@ -225,7 +225,7 @@ def get_arcseconds_center(shape, center, grid_size):
 
 def get_convergence_map(theta_e, e1, e2, x, y, display, impath):
 
-    save_path = "/home/akanshkarthik/anaconda3/Convergences"
+    
     lens_model_list = ["SIE"]
     lens_model = LensModel(lens_model_list=lens_model_list)
 
