@@ -17,17 +17,21 @@ from lenstronomy.LensModel.lens_model import LensModel
 import io
 
 from matplotlib.figure import Figure
-
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import base64
 from io import BytesIO
+from astropy.cosmology import Planck18
+from astropy import constants as const
+import astropy.units as u
 
 app = FastAPI()
+
 
 # 2. Add this block immediately after app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # Allows the React app
+    allow_origins=["http://localhost:3000"], # Allows your React app
     allow_credentials=True,
     allow_methods=["*"], # Allows POST, GET, etc.
     allow_headers=["*"], # Allows all headers
@@ -42,7 +46,7 @@ def load_custom_model(num_classes):
     
     
     # 2. Adjust the head if you trained on a custom number of classes
-    # (e.g., if you trained on 2 classes: background + the_object)
+    # (e.g., if you trained on 2 classes: background + your_object)
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = torchvision.models.detection.faster_rcnn.FastRCNNPredictor(in_features, num_classes)
     
@@ -122,7 +126,7 @@ def get_axial_estimates(x_data, y_data, center):
     return semi_major, semi_minor, pred_phi
 
 def custom_fit_ellipse_fixed_center(points, center):
-    print(f'Shape Points: {points[0]}')
+  #  print(f'Shape Points: {points[0]}')
 
     x_data = [point[0][0] for point in points]
     y_data = [point[0][1] for point in points]
@@ -145,9 +149,9 @@ def custom_fit_ellipse_fixed_center(points, center):
 
     return center, (a, b), phi
 
-def get_theta_e(a1, a2):
+def get_theta_e(a1, a2, pixelScale):
     # I changed the Scale here from 0.262 to the current Value 0.13099999998
-    return math.sqrt( (a1) * (a2) ) * 0.13099999998 
+    return math.sqrt( (a1) * (a2) ) * pixelScale
 def phi_q2_ellipticity(phi, q):
     """Transforms orientation angle and axis ratio into complex ellipticity moduli e1,
     e2.
@@ -160,7 +164,7 @@ def phi_q2_ellipticity(phi, q):
     e2 = (1.0 - q) / (1.0 + q) * np.sin(2 * phi)
     return e1, e2
 
-def SIE_Info(mask, image):
+def SIE_Info(mask, image, pixelScale):
     points = cv2.findNonZero(mask)
     print(f'Points: {points}')
     center = image.size
@@ -170,14 +174,15 @@ def SIE_Info(mask, image):
     _, axes, phi = ellipse
     major = max(axes)
     minor = min(axes)
-    theta_e = get_theta_e(major, minor)
+    theta_e = get_theta_e(major, minor, pixelScale)
     print(theta_e)
     q = minor / major
     deg = math.degrees(phi)
     e1, e2 = phi_q2_ellipticity(phi, q)
 
     mask = (mask * 255).astype(np.uint8)
-    mask.reshape(256, 256)
+    mask = cv2.resize(mask, (256, 256), interpolation=cv2.INTER_NEAREST)
+    mask = mask.reshape(256, 256)
     mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
     
     cv2.ellipse(mask, (int(x), int(y)), (int(major), int(minor)), deg, 0, 360, (0, 255, 0), 2)
@@ -201,7 +206,7 @@ def SIE_Info(mask, image):
     #overlay_base64 = base64.b64encode(buffer).decode('utf-8')
     
     # Return the data (Ensure you return the base64 string, not the array)
-    return get_theta_e(major/2, minor/2), e1, e2, x, y#, overlay_base64
+    return theta_e, e1, e2, x, y, ((int(major), int(minor)), phi)#, overlay_base64
 
 def get_arcseconds_center(shape, center, grid_size):
     w, h = shape
@@ -259,9 +264,47 @@ def get_convergence_map(theta_e, e1, e2, x, y, display, impath):
 
     return buf.getvalue()
 
+def show_overlay_mask(image, mask):
+    img_array = np.array(image)
+    
+    # Ensure mask is boolean
+    mask_bool = mask.astype(bool)
+    
+    # Handle different image modes
+    if len(img_array.shape) == 2:  # Grayscale
+        img_array[mask_bool] = 255
+    elif len(img_array.shape) == 3:  # RGB or RGBA
+        img_array[mask_bool] = 255  # This sets all channels to 255
+    
+    # Convert back to PIL Image
+    result_image = Image.fromarray(img_array)
+
+    plt.imshow(result_image)
+    plt.title("Label")
+    plt.axis('off')
+   # plt.show()
+    
+    return result_image
+
+def get_full_mass(theta_e, e1, e2, zl, zs):
+    cosmo = Planck18
+    D_l = cosmo.angular_diameter_distance(zl)
+    D_s = cosmo.angular_diameter_distance(zs)
+    D_ls = cosmo.angular_diameter_distance_z1z2(zl, zs)
+
+    Sigma_crit = (const.c**2 / (4*np.pi*const.G)) * (D_s / (D_l * D_ls))
+
+    theta_e_rad = (theta_e * u.arcsec).to(u.rad).value
+    R_E = theta_e_rad * D_l
+    M_E = np.pi * R_E**2 * Sigma_crit
+
+    return M_E.to(u.Msun).value
+
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), pixel_scale: float = Form(0.131), lensZ: float = Form(0.1371), sourceZ: float = Form(0.7126)):
+   # print(f"Received pixel_scale: {pixel_scale}")
+   # print(f"Type: {type(pixel_scale)}")
     # Read image
     image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
@@ -273,7 +316,7 @@ async def predict(file: UploadFile = File(...)):
     model.to(device)
     input_tensor = input_tensor.to(device)
     
-    # Run through the "Extra Pipeline Algorithms"
+    # Run through your "Extra Pipeline Algorithms"
     # Example: if you have a custom pre-filter
     # input_tensor = my_custom_pre_filter(input_tensor)
 
@@ -301,15 +344,47 @@ async def predict(file: UploadFile = File(...)):
     plt.imshow(results["mask"].squeeze())
     plt.title("Label")
     plt.axis('off')
-    plt.show()
+   # plt.show()
     mask_np = (results["mask"].squeeze() > 0.5).astype(np.uint8) * 255
 
-    theta_e, e1, e2, cx, cy = SIE_Info(mask_np, image)
+    theta_e, e1, e2, cx, cy, ellipse = SIE_Info(mask_np, image, pixel_scale)
     conv_map_bytes = get_convergence_map(theta_e, e1, e2, cx, cy, np.array(image).mean(axis=2), "path")
     conv_map_base64 = base64.b64encode(conv_map_bytes).decode('utf-8')
 
+    axes, phi = ellipse
+    major, minor = axes
+    # Inside your predict function
+    overlay_image = show_overlay_mask(image, mask_np)
+    ellipse_image = np.array(overlay_image)
+
+    cv2.ellipse(ellipse_image, (int(cx), int(cy)), axes, phi, 0, 360, (0, 255, 0), 2)
+    ellipse_image = Image.fromarray(ellipse_image)
+    # Create a buffer to hold the image bytes
+    buf = io.BytesIO()
+    overlay_image.save(buf, format="PNG")  # Save PIL Image to the buffer
+    overlay_bytes = buf.getvalue()        # Get the actual bytes
+
+    # Now encode to base64
+    overlay_encoded = base64.b64encode(overlay_bytes).decode('utf-8')
+
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    image_bytes = buf.getvalue()
+    image_encoded = base64.b64encode(image_bytes).decode('utf-8')
+
+    buf = io.BytesIO()
+    ellipse_image.save(buf, format="PNG")
+    ellipse_image_bytes = buf.getvalue()
+    ellipse_image_encoded = base64.b64encode(ellipse_image_bytes).decode('utf-8')
+
+    Mass = get_full_mass(theta_e, e1, e2, lensZ, sourceZ)
+
+    
     return {
+        "Image": image_encoded,
         "SIE_Info": [theta_e, e1, e2, cx, cy],
-       # "overlay": overlay_img,
-        "convergence_map": conv_map_base64
+        "overlay": overlay_encoded,
+        "ellipse": ellipse_image_encoded, 
+        "convergence_map": conv_map_base64,
+        "Mass": Mass
     }
