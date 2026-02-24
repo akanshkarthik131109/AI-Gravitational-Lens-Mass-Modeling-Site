@@ -3,7 +3,7 @@ uvicorn[standard]
 python-multipart
 
 torch==2.10
-torchvision==0.16.2
+torchvision==0.25.0
 
 pillow
 opencv-python-headless
