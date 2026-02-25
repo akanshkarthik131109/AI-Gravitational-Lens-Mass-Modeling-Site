@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/LensSwift/static/css/main.9b7086cf.css",
+    "main.js": "/LensSwift/static/js/main.9b52e9bc.js",
+    "static/js/453.7d8ab0e9.chunk.js": "/LensSwift/static/js/453.7d8ab0e9.chunk.js",
+    "index.html": "/LensSwift/index.html",
+    "main.9b7086cf.css.map": "/LensSwift/static/css/main.9b7086cf.css.map",
+    "main.9b52e9bc.js.map": "/LensSwift/static/js/main.9b52e9bc.js.map",
+    "453.7d8ab0e9.chunk.js.map": "/LensSwift/static/js/453.7d8ab0e9.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9b7086cf.css",
+    "static/js/main.9b52e9bc.js"
+  ]
+}
