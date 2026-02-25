@@ -41,7 +41,7 @@ app.add_middleware(
 def load_custom_model(num_classes):
     # 1. Initialize the architecture
     # Must match the architecture you used during training
-    model_path = '/lenses_model_full_data_e20_V3_Update_Loss+Normalization.pt'
+    model_path = 'lenses_model_full_data_e20_V3_Update_Loss+Normalization.pt'
     model = maskrcnn_resnet50_fpn(pretrained=False, num_classes=3)
     
     
