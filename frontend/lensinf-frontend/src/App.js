@@ -11,11 +11,11 @@ function App() {
 
 
 
-  const impath_1 = "public/Test_Pics/lens-141-_jpg.rf.f2d971e2e122c0037c9211d195ab1d83.jpg"
-  const impath_2 = "public/Test_Pics/lens-156-_jpg.rf.02900da393dbc901560fc92c2dbb8376.jpg"
-  const impath_3 = "public/Test_Pics/lens-166-_jpg.rf.b8c0b20d1ea024aca904c9e800922949.jpg"
-  const impath_4 = "public/Test_Pics/lens-198-_jpg.rf.7af93cbf1ad2bf848ff5a1b6d1ca8f69.jpg"
-  const impath_5 = "public/Test_Pics/lens-200-_jpg.rf.88a0edc79a9afd20f9efb6a62ef65195.jpg"
+  const impath_1 = "/frontend/lensinf-frontend/public/Test_Pics/lens-141-_jpg.rf.f2d971e2e122c0037c9211d195ab1d83.jpg"
+  const impath_2 = "/frontend/lensinf-frontend/public/Test_Pics/lens-156-_jpg.rf.02900da393dbc901560fc92c2dbb8376.jpg"
+  const impath_3 = "/frontend/lensinf-frontend/public/Test_Pics/lens-166-_jpg.rf.b8c0b20d1ea024aca904c9e800922949.jpg"
+  const impath_4 = "/frontend/lensinf-frontend/public/Test_Pics/lens-198-_jpg.rf.7af93cbf1ad2bf848ff5a1b6d1ca8f69.jpg"
+  const impath_5 = "/frontend/lensinf-frontend/public/Test_Pics/lens-200-_jpg.rf.88a0edc79a9afd20f9efb6a62ef65195.jpg"
 
   const imName_1 = "lens-141-_jpg.rf.f2d971e2e122c0037c9211d195ab1d83.jpg"
   const imName_2 = "lens-156-_jpg.rf.02900da393dbc901560fc92c2dbb8376.jpg"
