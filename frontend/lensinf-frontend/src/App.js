@@ -48,7 +48,7 @@ function App() {
     formData.append('source_z', sourceZ); // Add this
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/predict', {
+      const response = await fetch('http://18.220.50.214/predict', {
         method: 'POST',
         body: formData,
       });
